@@ -1,0 +1,31 @@
+{
+  "name": "json-mini-patch",
+  "version": "0.1.0",
+  "description": "small minimal JSON patch implementation",
+  "keywords": [
+    "JSON",
+    "JSON patch",
+    "rfc 6902"
+  ],
+  "author": "Hugo Villeneuve",
+  "main": "./src/jsonpatch.js",
+  "dependencies": {},
+  "devDependencies": {
+    "cotest": "^1.0.1",
+    "json-patch-test-suite": "^1.1.0"
+  },
+  "repository": {
+		"type": "git",
+		"url": "https://github.com/hville/json-mini-patch.git"
+	},
+  "scripts": {
+    "test": "cotest ./tst",
+    "prepublish": "npm test",
+    "min": "webpack"
+  },
+  "private": false,
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+}
