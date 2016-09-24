@@ -15,7 +15,6 @@ This is useful for cases where additional processing and logic is required by st
 When processing a JSON Patch, the string path must be parsed and unescaped into a series of object keys.
 By seperating the processing and implementation of the patch, it is easier to use this implementation as a base for more complex object stores.
 
-
 # What
 
 ```javascript
