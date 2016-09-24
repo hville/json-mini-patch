@@ -1,5 +1,10 @@
 module.exports = pointerToKeys
 
+/**
+ * convert JSON Pointer RFC 6901 to array of keys
+ * @param {string} ptr - JSON Pointer RFC 6901
+ * @return {!Array} array of keys
+ */
 function pointerToKeys(ptr) {
 	var idx = -1,
 			arr = []
@@ -7,7 +12,7 @@ function pointerToKeys(ptr) {
 		if (ptr[i] === '/') arr[++idx] = ''
 		else if (ptr[i] === '~') arr[idx] += ptr[++i] === '0' ? '~'
 			: ptr[i] === '1' ? '/'
-			: undefined
+			: ''
 		else arr[idx] += ptr[i]
 	}
 	return arr
