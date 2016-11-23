@@ -24,8 +24,8 @@ module.exports = function (document, patch) {
 var ops = {
 	t: function(res, itm, path) {
 		for (var i=0, val = res; i<path.length; ++i) {
+			if (!val) return
 			val = val[path[i]]
-			if (val === undefined) return
 		}
 		if (isEqual(val, itm[2])) return res
 	},
@@ -46,8 +46,8 @@ var ops = {
 		// validate that the from pointer is a valid reference
 		var val = res
 		for (var i=0; i<from.length; ++i) {
+			if (!val) throw Error(errorMsg('from', itm[2]))
 			val = val[from[i]]
-			if (val === undefined) throw Error(errorMsg('from', itm[2]))
 		}
 		res = pathAction(keyDel, res, from)
 		return pathAction(keyAdd, res, path, val)
@@ -60,8 +60,8 @@ var ops = {
 		// validate that the from pointer is a valid reference
 		var val = res
 		for (var i=0; i<from.length; ++i) {
+			if (!val) throw Error(errorMsg('from', itm[2]))
 			val = val[from[i]]
-			if (val === undefined) throw Error(errorMsg('from', itm[2]))
 		}
 		return pathAction(keyAdd, res, path, val)
 	}
@@ -74,29 +74,32 @@ var ops = {
  * @param {?} [value] operation value
  * @return {Object} modified result object
  */
-function pathAction(action, result, path, value) {
+function pathAction(fcn, doc, path, value) {
 	if (!path.length) return value
-	if (path.length === 1) return action(result, path[0], value)
-	var pathLen = path.length - 2,
-			branchKey = path[pathLen],
-			leafKey = path[pathLen + 1],
-			root = shallowClone(result),
-			parent = root
+	if (!doc) throw Error(errorMsg('path', path.toString()))
+	if (path.length === 1) return fcn(doc, path[0], value)
 
-	for (var i=0; i < pathLen; ++i) {
-		parent = parent[path[i]] = shallowClone(parent[path[i]])
-		if (!parent) throw Error(errorMsg('path', path.toString()))
+	var res = shallowClone(doc),
+			branch = res,
+			len = path.length - 2
+
+	var keyLeaf = path[len],
+			key = path[len + 1]
+
+	for (var i=0; i < len; ++i) {
+		branch = branch[path[i]] = shallowClone(branch[path[i]])
+		if (!branch) throw Error(errorMsg('path', path.toString()))
 	}
 	// validate that the pointer is a valid reference up to the second last key
-	var branch = parent[branchKey]
-	if (!branch) throw Error(errorMsg('path', path.toString()))
+	var leaf = branch[keyLeaf]
+	if (!leaf) throw Error(errorMsg('path', path.toString()))
 
-	// remaining key validations are done at the branch operation level
-	var newBranch = action(branch, leafKey, value)
-	if (newBranch === branch) return result
+	// remaining key validations are done at the leaf operation level
+	var newLeaf = fcn(leaf, key, value)
+	if (newLeaf === leaf) return doc
 
-	parent[branchKey] = newBranch
-	return root
+	branch[keyLeaf] = newLeaf
+	return res
 }
 /**
  * Format errors
@@ -122,17 +125,11 @@ function keyRep(obj, key, val) {
 
 function keyDel(obj, key) {
 	if (obj[key] === undefined) throw Error(errorMsg('path key', key))
+	var clone = shallowClone(obj)
 
-	var clone
-	if (Array.isArray(obj)) {
-		clone = obj.slice()
-		clone.splice(key, 1)
-	} else {
-		clone = {}
-		for (var i=0, keys=Object.keys(obj); i<keys.length; ++i) {
-			if (keys[i] !== key) clone[keys[i]] = obj[keys[i]]
-		}
-	}
+	if (Array.isArray(obj)) clone.splice(key, 1)
+	else delete clone[key]
+
 	return clone
 }
 
