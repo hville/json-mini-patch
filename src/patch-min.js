@@ -4,24 +4,21 @@ var isEqual = require('./is-equal')
  * @param	{Object} document - target JSON like object
  * @returns {Object} - result object
  */
-var DKEY = 'd'
 
 module.exports = function (document, patch) {
-	var result = {}
-	result[DKEY] = document
+	var result = document
 
 	for (var i=0; i< patch.length; ++i) {
 		var itm = patch[i],
-				path = prepend(DKEY, itm[1]),
+				path = itm[1],
 				op = ops[itm[0]]
-
 		if (!path) throw Error(errorMsg('path', path))
 		if (!op) throw Error(errorMsg('op', itm[0]))
 
 		result = op(result, itm, path)
 		if (result === undefined) return document //test failed, patch canceled
 	}
-	return result[DKEY]
+	return result
 }
 
 var ops = {
@@ -43,7 +40,7 @@ var ops = {
 	},
 	m: function(res, itm, path) {
 		// validate that the from pointer has a vaild format
-		var from = prepend(DKEY, itm[2])
+		var from = itm[2]
 		if (!from) throw Error(errorMsg('from', itm[2]))
 
 		// validate that the from pointer is a valid reference
@@ -52,12 +49,12 @@ var ops = {
 			val = val[from[i]]
 			if (val === undefined) throw Error(errorMsg('from', itm[2]))
 		}
-		res = from.length === 1 ? keyDel(res, DKEY) : pathAction(keyDel, res, from)
+		res = pathAction(keyDel, res, from)
 		return pathAction(keyAdd, res, path, val)
 	},
 	c: function(res, itm, path) {
 		// validate that the from pointer has a vaild format
-		var from = prepend(DKEY, itm[2])
+		var from = itm[2]
 		if (!from) throw Error(errorMsg('from', itm[2]))
 
 		// validate that the from pointer is a valid reference
@@ -158,10 +155,6 @@ function keyAdd(obj, key, val) {
 	if (obj[key] === val) return obj
 	result[key] = val
 	return result
-}
-function prepend(key, arr) {
-	for (var i=0, res=[key]; i<arr.length; ++i) res[i+1] = arr[i]
-	return res
 }
 /**
  * @param {Object|Array} obj - object or array to be cloned
