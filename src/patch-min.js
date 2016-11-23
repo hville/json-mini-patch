@@ -1,5 +1,4 @@
-var isEqual = require('./is-equal'),
-		shallowClone = require('./shallow-clone')
+var isEqual = require('./is-equal')
 /**
  * @param	{Array} patch - JSON patch
  * @param	{Object} document - target JSON like object
@@ -165,4 +164,11 @@ function keyAdd(obj, key, val) {
 function prepend(key, arr) {
 	for (var i=0, res=[key]; i<arr.length; ++i) res[i+1] = arr[i]
 	return res
+}
+/**
+ * @param {Object|Array} obj - object or array to be cloned
+ * @returns {Object|Array} clone
+ */
+function shallowClone(obj) {
+	return Array.isArray(obj) ? obj.slice() : Object.assign({}, obj)
 }

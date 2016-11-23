@@ -1,6 +1,6 @@
 {
   "name": "json-mini-patch",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "small minimal JSON patch implementation",
   "keywords": [
     "JSON",
