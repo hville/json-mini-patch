@@ -18,8 +18,8 @@ module.exports = function (document, patch) {
 		if (!path) throw Error(errorMsg('path', path))
 		if (!op) throw Error(errorMsg('op', itm[0]))
 
-		result = op(result, itm, path, path.length === 1)
-		if (result === null) return document //test failed, patch canceled
+		result = op(result, itm, path)
+		if (result === undefined) return document //test failed, patch canceled
 	}
 	return result[DKEY]
 }
@@ -28,20 +28,20 @@ var ops = {
 	t: function(res, itm, path) {
 		for (var i=0, val = res; i<path.length; ++i) {
 			val = val[path[i]]
-			if (val === undefined) return null
+			if (val === undefined) return
 		}
-		return isEqual(val, itm[2]) ? res : null
+		if (isEqual(val, itm[2])) return res
 	},
-	d: function(res, itm, path, isRoot) {
-		return isRoot ? keyDel(res, DKEY) : pathAction(keyDel, res, path)
+	d: function(res, itm, path) {
+		return pathAction(keyDel, res, path)
 	},
-	a: function(res, itm, path, isRoot) {
-		return isRoot ? keyAdd(res, DKEY, itm[2]) : pathAction(keyAdd, res, path, itm[2])
+	a: function(res, itm, path) {
+		return pathAction(keyAdd, res, path, itm[2])
 	},
-	r: function(res, itm, path, isRoot) {
-		return isRoot ? keyRep(res, DKEY, itm[2]) : pathAction(keyRep, res, path, itm[2])
+	r: function(res, itm, path) {
+		return pathAction(keyRep, res, path, itm[2])
 	},
-	m: function(res, itm, path, isRoot) {
+	m: function(res, itm, path) {
 		// validate that the from pointer has a vaild format
 		var from = prepend(DKEY, itm[2])
 		if (!from) throw Error(errorMsg('from', itm[2]))
@@ -53,9 +53,9 @@ var ops = {
 			if (val === undefined) throw Error(errorMsg('from', itm[2]))
 		}
 		res = from.length === 1 ? keyDel(res, DKEY) : pathAction(keyDel, res, from)
-		return isRoot ? keyAdd(res, DKEY, val) : pathAction(keyAdd, res, path, val)
+		return pathAction(keyAdd, res, path, val)
 	},
-	c: function(res, itm, path, isRoot) {
+	c: function(res, itm, path) {
 		// validate that the from pointer has a vaild format
 		var from = prepend(DKEY, itm[2])
 		if (!from) throw Error(errorMsg('from', itm[2]))
@@ -66,7 +66,7 @@ var ops = {
 			val = val[from[i]]
 			if (val === undefined) throw Error(errorMsg('from', itm[2]))
 		}
-		return isRoot ? keyAdd(res, DKEY, val) : pathAction(keyAdd, res, path, val)
+		return pathAction(keyAdd, res, path, val)
 	}
 }
 /**
@@ -78,26 +78,24 @@ var ops = {
  * @return {Object} modified result object
  */
 function pathAction(action, result, path, value) {
-	var leafKey = path[path.length - 1],
+	if (!path.length) return value
+	if (path.length === 1) return action(result, path[0], value)
+	var pathLen = path.length - 2,
+			branchKey = path[pathLen],
+			leafKey = path[pathLen + 1],
 			root = shallowClone(result),
-			parent = root,
-			branchKey,
-			branch,
-			newBranch
+			parent = root
 
-	for (var i=0; i<path.length-2; ++i) {
-		parent[path[i]] = shallowClone(parent[path[i]])
-		parent = parent[path[i]]
-		if (parent === undefined) throw Error(errorMsg('path', path.toString()))
+	for (var i=0; i < pathLen; ++i) {
+		parent = parent[path[i]] = shallowClone(parent[path[i]])
+		if (!parent) throw Error(errorMsg('path', path.toString()))
 	}
-	branchKey = path[i]
-
 	// validate that the pointer is a valid reference up to the second last key
-	branch = parent[branchKey]
-	if (!branch || typeof branch !== 'object') throw Error(errorMsg('path', path.toString()))
+	var branch = parent[branchKey]
+	if (!branch) throw Error(errorMsg('path', path.toString()))
 
 	// remaining key validations are done at the branch operation level
-	newBranch = action(branch, leafKey, value)
+	var newBranch = action(branch, leafKey, value)
 	if (newBranch === branch) return result
 
 	parent[branchKey] = newBranch
