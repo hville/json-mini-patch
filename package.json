@@ -1,6 +1,6 @@
 {
   "name": "json-mini-patch",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "small minimal JSON patch implementation",
   "keywords": [
     "JSON",
@@ -11,13 +11,13 @@
   "main": "./src/jsonpatch.js",
   "dependencies": {},
   "devDependencies": {
-    "cotest": "^1.0.1",
+    "cotest": "^1.6.1",
     "json-patch-test-suite": "^1.1.0"
   },
   "repository": {
-		"type": "git",
-		"url": "https://github.com/hville/json-mini-patch.git"
-	},
+    "type": "git",
+    "url": "https://github.com/hville/json-mini-patch.git"
+  },
   "scripts": {
     "test": "cotest ./tst",
     "prepublish": "npm test",

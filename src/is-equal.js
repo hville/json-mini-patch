@@ -7,31 +7,30 @@ module.exports = isEqual
  * @return {boolean|void} truthy if equal
  */
 function isEqual(obj, ref) {
-	if (obj === ref) return true
 	var cO = cType(obj),
 			cR = cType(ref)
-	if (cO === cR) {
-		if (cO === Array && obj.length === ref.length) {
-			for (var i=0; i<obj.length; ++i) if (!isEqual(obj[i], ref[i])) return false
+	if (cO !== cR) return
+	switch (cO) {
+		case Array:
+			if (obj.length !== ref.length) return
+			for (var i=0; i<obj.length; ++i) if (!isEqual(obj[i], ref[i])) return
 			return true
-		}
-		if (cO === Object) {
+		case Object:
 			var ko = Object.keys(obj).sort(),
 					kr = Object.keys(ref).sort()
-			if (ko.length !== kr.length) return false
-			for (i=0; i<ko.length; ++i) if (!isEqual(obj[ko[i]], ref[kr[i]])) return false
+			if (ko.length !== kr.length) return
+			for (i=0; i<ko.length; ++i) if (!isEqual(obj[ko[i]], ref[kr[i]])) return
 			return true
-		}
+		default:
+			return obj === ref
 	}
-	return false
 }
 /**
- * @param {Object|Array} obj - object to test
+ * @param {*} v - object to test
  * @return {Object|undefined} object Constructor type
  */
-function cType(obj) {
-	if (!obj) return
-	if (Array.isArray(obj)) return Array
-	if (obj.constructor === Object) return Object
-	if (!obj.constructor && typeof obj === 'object') return Object
+function cType(v) {
+	return v === undefined ? undefined
+		: v === null ? null
+		: v.constructor || Object
 }
