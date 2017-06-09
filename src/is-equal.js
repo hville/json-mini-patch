@@ -24,6 +24,7 @@ export function isEqual(obj, ref) {
 	}
 }
 
+
 /**
  * @param {*} v - object to test
  * @return {Object|undefined} object Constructor type

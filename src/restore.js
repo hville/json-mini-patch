@@ -10,6 +10,7 @@ export function restore(min) {
 	return min.map(mini2patch)
 }
 
+
 /**
  * convert a mini patch item to standard JSON patch item
  * @param {Array} itm - mini patch item to be converted

@@ -1,11 +1,11 @@
-import {patch} from './src/patch-min'
+import {patch} from './src/patch'
 import {compress} from './src/compress'
 
 export function jsonpatch(doc, actions) {
 	return patch(doc, compress(actions))
 }
 
-export {patch} from './src/patch-min'
+export {patch} from './src/patch'
 export {compress} from './src/compress'
 export {restore} from './src/restore'
 export {getPointer} from './src/get-pointer'

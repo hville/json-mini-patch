@@ -11,6 +11,7 @@ export function getPointer(path) {
 	return res
 }
 
+
 /**
  * escape JSON Pointer reserve characters
  * @param {string} key - path key

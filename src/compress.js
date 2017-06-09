@@ -14,6 +14,7 @@ export function compress(std) {
 	return res
 }
 
+
 /**
  * @param {Object} itm patch item to parse
  * @return {Array|undefined} parsed patch

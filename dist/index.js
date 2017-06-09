@@ -3,6 +3,14 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+function get(doc, pth) {
+	for (var i=0, val = doc; i<pth.length; ++i) {
+		if (!val) return
+		val = val[pth[i]];
+	}
+	return val
+}
+
 /**
  * deep Equal check on JSON-like objects
  * @function
@@ -29,6 +37,7 @@ function isEqual(obj, ref) {
 	}
 }
 
+
 /**
  * @param {*} v - object to test
  * @return {Object|undefined} object Constructor type
@@ -39,48 +48,30 @@ function cType(v) {
 		: v.constructor || Object
 }
 
-/**
- * @function
- * @param	{Object} document - target JSON like object
- * @param	{Array} patch - JSON patch
- * @returns {Object} - result object
- */
-function patch(document, actions) {
-	var result = document;
-
-	for (var i=0; i< actions.length; ++i) {
-		var itm = actions[i],
-				path = itm[1],
-				op = ops[itm[0]];
-		if (!path) throw Error(errorMsg('path', path))
-		if (!op) throw Error(errorMsg('op', itm[0]))
-
-		result = op(result, path, itm[2]);
-		if (result === undefined) return document //test failed, patch canceled
-	}
-	return result
+function test(res, keys, ref) {
+	var val = get(res, keys);
+	if (val === undefined) return
+	if (isEqual(val, ref)) return res
 }
 
-var ops = {
-	t: function(res, keys, ref) {
-		var val = get(res, keys);
-		if (val === undefined) return
-		if (isEqual(val, ref)) return res
-	},
-	d: del,
-	a: add,
-	r: rep,
-	m: function(res, path, from) {
-		var val = get(res, from);
-		if (val === undefined) throw Error(errorMsg('from', from))
-		return add(del(res, from), path, val)
-	},
-	c: function(res, path, from) {
-		var val = get(res, from);
-		if (val === undefined) throw Error(errorMsg('from', from))
-		return add(res, path, val)
-	}
-};
+/**
+ * Format errors
+ * @param {string} key patch item key when error triggered
+ * @param {string} [val] patch item key value when error triggered
+ * @return {string} error message
+ */
+function errorMsg(key, val) {
+	return 'Patch item failed at ' + key + ':' + JSON.stringify(val)
+}
+
+/**
+ * @param {Object|Array} obj - object or array to be cloned
+ * @returns {Object|Array} clone
+ */
+function shallowClone(obj) {
+	return Array.isArray(obj) ? obj.slice() : Object.assign({}, obj)
+}
+
 
 /**
  * Climbs and clones through the path before making change
@@ -96,48 +87,7 @@ function cloneLeaf(obj, pth) {
 	}
 	return obj
 }
-/**
- * Format errors
- * @param {string} key patch item key when error triggered
- * @param {string} [val] patch item key value when error triggered
- * @return {string} error message
- */
-function errorMsg(key, val) {
-	return 'Patch item failed at ' + key + ':' + JSON.stringify(val)
-}
 
-// BASIC KEY OPERATIONS
-function get(doc, pth) {
-	for (var i=0, val = doc; i<pth.length; ++i) {
-		if (!val) return
-		val = val[pth[i]];
-	}
-	return val
-}
-function rep(doc, pth, val) {
-	if (val === undefined) throw Error(errorMsg('value', val))
-	if (!pth.length) return val
-
-	var res = shallowClone(doc),
-			tgt = cloneLeaf(res, pth),
-			key = pth[pth.length-1];
-
-	if (isEqual(tgt[key], val)) return doc //no change
-	if (tgt[key] === undefined) throw Error(errorMsg('path key', key))
-	tgt[key] = val;
-	return res
-}
-function del(doc, pth) {
-	if (!pth.length) return
-	var res = shallowClone(doc),
-			tgt = cloneLeaf(res, pth),
-			key = pth[pth.length-1];
-
-	if (tgt[key] === undefined) throw Error(errorMsg('path key', key))
-	if (Array.isArray(tgt)) tgt.splice(key, 1);
-	else delete tgt[key];
-	return res
-}
 function add(doc, pth, val) {
 	if (val === undefined) throw Error(errorMsg('value', val))
 	if (!pth.length) return val
@@ -155,12 +105,67 @@ function add(doc, pth, val) {
 	tgt[key] = val;
 	return res
 }
+
+function put(doc, pth, val) {
+	if (val === undefined) throw Error(errorMsg('value', val))
+	if (!pth.length) return val
+
+	var res = shallowClone(doc),
+			tgt = cloneLeaf(res, pth),
+			key = pth[pth.length-1];
+
+	if (isEqual(tgt[key], val)) return doc //no change
+	if (tgt[key] === undefined) throw Error(errorMsg('path key', key))
+	tgt[key] = val;
+	return res
+}
+
+function del(doc, pth) {
+	if (!pth.length) return
+	var res = shallowClone(doc),
+			tgt = cloneLeaf(res, pth),
+			key = pth[pth.length-1];
+
+	if (tgt[key] === undefined) throw Error(errorMsg('path key', key))
+	if (Array.isArray(tgt)) tgt.splice(key, 1);
+	else delete tgt[key];
+	return res
+}
+
+function move(res, path, from) {
+	var val = get(res, from);
+	if (val === undefined) throw Error(errorMsg('from', from))
+	return add(del(res, from), path, val)
+}
+
+function copy(res, path, from) {
+	var val = get(res, from);
+	if (val === undefined) throw Error(errorMsg('from', from))
+	return add(res, path, val)
+}
+
+var ops = {t: test, a: add, r: put, d: del, m: move, c: copy};
+
 /**
- * @param {Object|Array} obj - object or array to be cloned
- * @returns {Object|Array} clone
+ * @function
+ * @param	{Object} document - target JSON like object
+ * @param	{Array} actions - JSON patch
+ * @returns {Object} - result object
  */
-function shallowClone(obj) {
-	return Array.isArray(obj) ? obj.slice() : Object.assign({}, obj)
+function patch(document, actions) {
+	var result = document;
+
+	for (var i=0; i< actions.length; ++i) {
+		var itm = actions[i],
+				path = itm[1],
+				op = ops[itm[0]];
+		if (!path) throw Error(errorMsg('path', path))
+		if (!op) throw Error(errorMsg('op', itm[0]))
+
+		result = op(result, path, itm[2]);
+		if (result === undefined) return document //test failed, patch canceled
+	}
+	return result
 }
 
 /**
@@ -196,6 +201,7 @@ function compress(std) {
 	return res
 }
 
+
 /**
  * @param {Object} itm patch item to parse
  * @return {Array|undefined} parsed patch
@@ -226,6 +232,7 @@ function getPointer(path) {
 	return res
 }
 
+
 /**
  * escape JSON Pointer reserve characters
  * @param {string} key - path key
@@ -249,6 +256,7 @@ function escape(key) {
 function restore(min) {
 	return min.map(mini2patch)
 }
+
 
 /**
  * convert a mini patch item to standard JSON patch item
