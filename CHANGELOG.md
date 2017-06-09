@@ -9,7 +9,7 @@
 ~~Removed, Changed, Deprecated, Added, Fixed, Security~~
 - one fewer array created
 
-## [2.0.0] - 2017-06-09
+## [2.0.1] - 2017-06-09
 ### Changed
 - renamed all methods to more descriptive names `jsonpatch`, `patch`, `compress`, `restore`
 
