@@ -1,16 +1,16 @@
-module.exports = keysToPointer
-
 /**
  * convert an array of keys path to a JSON pointer
+ * @function
  * @param {Array} path - array of keys
  * @return {string} JSON pointer
  */
-function keysToPointer(path) {
+export function getPointer(path) {
 	for (var i=0, res=''; i<path.length; ++i) {
 		res += '/' + escape(path[i])
 	}
 	return res
 }
+
 /**
  * escape JSON Pointer reserve characters
  * @param {string} key - path key

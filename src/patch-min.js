@@ -1,15 +1,16 @@
-var isEqual = require('./is-equal')
+import {isEqual} from './is-equal'
+
 /**
- * @param	{Array} patch - JSON patch
+ * @function
  * @param	{Object} document - target JSON like object
+ * @param	{Array} patch - JSON patch
  * @returns {Object} - result object
  */
-
-module.exports = function (document, patch) {
+export function patch(document, actions) {
 	var result = document
 
-	for (var i=0; i< patch.length; ++i) {
-		var itm = patch[i],
+	for (var i=0; i< actions.length; ++i) {
+		var itm = actions[i],
 				path = itm[1],
 				op = ops[itm[0]]
 		if (!path) throw Error(errorMsg('path', path))
@@ -82,7 +83,7 @@ function rep(doc, pth, val) {
 			tgt = cloneLeaf(res, pth),
 			key = pth[pth.length-1]
 
-	if (tgt[key] === val) return doc //no change
+	if (isEqual(tgt[key], val)) return doc //no change
 	if (tgt[key] === undefined) throw Error(errorMsg('path key', key))
 	tgt[key] = val
 	return res
@@ -111,7 +112,7 @@ function add(doc, pth, val) {
 		else tgt.splice(key, 0, val)
 		return res
 	}
-	if (tgt[key] === val) return doc //no change
+	if (isEqual(tgt[key], val)) return doc //no change
 	tgt[key] = val
 	return res
 }

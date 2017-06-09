@@ -3,13 +3,13 @@
 var ct = require('cotest'),
 		setTests = require('../node_modules/json-patch-test-suite/tests.json'),
 		setSpecs = require('../node_modules/json-patch-test-suite/spec_tests.json'),
-		mini = require('../index').min,
-		norm2mini = require('../index').s2m
+		patch = require('../').patch,
+		compress = require('../').compress
 
 var skipDisabled = false
 
 var patcher = function(src, ptc) {
-	return mini(src, norm2mini(ptc))
+	return patch(src, compress(ptc))
 }
 
 function tSet(set) {
@@ -44,10 +44,10 @@ ct('edge cases', function() {
 	var ref = {a:'a'}
 	var src = ref
 
-	var res = mini(src, [['t', ['a'], 'b'], ['r', ['a'], 'c']])
+	var res = patch(src, [['t', ['a'], 'b'], ['r', ['a'], 'c']])
 	ct('===', res, ref, 'failed test returns untouched source')
 
-	res = mini(src, [['r', ['a'], 'mustfail'], ['t', ['a'], 'notPassed']])
+	res = patch(src, [['r', ['a'], 'mustfail'], ['t', ['a'], 'notPassed']])
 	ct('===',res.a, 'a') //unchanged
 	ct('===',res, ref) //uncloned
 })
@@ -56,11 +56,11 @@ ct('internal features', function() {
 	var ref = {a:'a', b:[0]}
 	var src = ref
 
-	var res = mini(src, [['r', ['a'], 'a']])
+	var res = patch(src, [['r', ['a'], 'a']])
 	ct('===', res, ref, 'patching same value return un-cloned initial object')
-	res = mini(src, [['r', ['b'], ref.b]])
+	res = patch(src, [['r', ['b'], ref.b]])
 	ct('===', res, ref, 'patching same value return un-cloned initial object')
-	res = mini(src, [['r', ['b', 0], 0]])
+	res = patch(src, [['r', ['b', 0], 0]])
 	ct('===', res, ref, 'patching same value return un-cloned initial object')//
 
 })

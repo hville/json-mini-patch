@@ -2,8 +2,8 @@
 'use strict'
 
 var ct = require('cotest'),
-		norm2mini = require('../index').s2m,
-		mini2norm = require('../index').m2s
+		compress = require('../').compress,
+		restore = require('../').restore
 
 var mini = [
 	['t', ['t', 'tt'], 'tt'],
@@ -15,9 +15,9 @@ var mini = [
 	['a', [], '']
 ]
 
-var norm = mini2norm(mini)
-var mini2 = norm2mini(norm)
-var norm2 = mini2norm(mini2)
+var norm = restore(mini)
+var mini2 = compress(norm)
+var norm2 = restore(mini2)
 
 ct('reversible', function() {
 	ct('{==}', norm, norm2)

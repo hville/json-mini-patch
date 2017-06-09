@@ -1,11 +1,10 @@
-module.exports = pointerToKeys
-
 /**
  * convert JSON Pointer RFC 6901 to array of keys
+ * @function
  * @param {string} ptr - JSON Pointer RFC 6901
  * @return {!Array} array of keys
  */
-function pointerToKeys(ptr) {
+export function getKeys(ptr) {
 	var idx = -1,
 			arr = []
 	for (var i=0; i<ptr.length; ++i) {

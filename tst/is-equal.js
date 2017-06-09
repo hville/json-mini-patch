@@ -2,7 +2,7 @@
 'use strict'
 
 var ct = require('cotest'),
-		isEqual = require('../src/is-equal')
+		isEqual = require('../').isEqual
 
 ct('primitives', function() {
 	ct('===', isEqual(1,1), true)
